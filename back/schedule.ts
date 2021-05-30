@@ -28,7 +28,6 @@ const run = async () => {
           const _schedule = task.schedule && task.schedule.split(' ');
           if (
             _schedule &&
-            _schedule.length > 5 &&
             task.status !== CrontabStatus.disabled &&
             !task.isDisabled
           ) {
@@ -37,7 +36,11 @@ const run = async () => {
               if (!command.includes('task ') && !command.includes('ql ')) {
                 command = `task ${command}`;
               }
-              exec(command);
+              const cp = exec(command);
+              cronDb.update(
+                { _id: task._id },
+                { $set: { status: CrontabStatus.running, pid: cp.pid } },
+              );
             });
           }
         }

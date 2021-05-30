@@ -40,7 +40,7 @@ export default class CronService {
     tab.created = new Date().valueOf();
     tab.saved = false;
     const doc = await this.insert(tab);
-    await this.set_crontab(this.isSixCron(doc));
+    await this.set_crontab();
     return doc;
   }
 
@@ -62,7 +62,7 @@ export default class CronService {
     const tab = new Crontab({ ...doc, ...other });
     tab.saved = false;
     const newDoc = await this.updateDb(tab);
-    await this.set_crontab(this.isSixCron(newDoc));
+    await this.set_crontab();
     return newDoc;
   }
 
@@ -93,7 +93,7 @@ export default class CronService {
         { _id: { $in: ids } },
         { multi: true },
         async (err) => {
-          await this.set_crontab(true);
+          await this.set_crontab();
           resolve();
         },
       );
@@ -247,7 +247,7 @@ export default class CronService {
         { $set: { isDisabled: 1 } },
         { multi: true },
         async (err) => {
-          await this.set_crontab(true);
+          await this.set_crontab();
           resolve();
         },
       );
@@ -261,7 +261,7 @@ export default class CronService {
         { $set: { isDisabled: 0 } },
         { multi: true },
         async (err) => {
-          await this.set_crontab(true);
+          await this.set_crontab();
           resolve();
         },
       );
@@ -298,12 +298,9 @@ export default class CronService {
     });
 
     this.logger.silly(crontab_string);
-    fs.writeFileSync(config.crontabFile, crontab_string);
+    // fs.writeFileSync(config.crontabFile, crontab_string);
 
-    execSync(`crontab ${config.crontabFile}`);
-    if (needReloadSchedule) {
-      exec(`pm2 reload schedule`);
-    }
+    exec(`pm2 reload schedule`);
     this.cronDb.update({}, { $set: { saved: true } }, { multi: true });
   }
 
